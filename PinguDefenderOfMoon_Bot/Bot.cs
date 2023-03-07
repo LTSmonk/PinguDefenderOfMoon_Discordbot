@@ -4,6 +4,7 @@ using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using Newtonsoft.Json;
+using PinguDefenderOfMoon_Bot.Commands;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,6 +31,7 @@ namespace PinguDefenderOfMoon_Bot
 
             var config = new DiscordConfiguration()
             {
+                Intents = DiscordIntents.All,
                 Token = configJson.Token,
                 TokenType = TokenType.Bot,
                 AutoReconnect = true,
@@ -46,7 +48,12 @@ namespace PinguDefenderOfMoon_Bot
                 StringPrefixes = new string[] { configJson.Prefix },
                 EnableMentionPrefix = true,
                 EnableDms = true,
+                EnableDefaultHelp = false,
             };
+
+            Commands = Client.UseCommandsNext(commandConfig);
+
+            Commands.RegisterCommands<StandardCommands>();
 
             await Client.ConnectAsync();
             await Task.Delay(-1);
