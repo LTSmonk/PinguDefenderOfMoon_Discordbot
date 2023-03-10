@@ -1,5 +1,6 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,18 +19,18 @@ namespace PinguDefenderOfMoon_Bot.Commands
             
         }
 
-        [Command("add")]
-        public async Task Addition(CommandContext ctx, int num1, int num2)
+        [Command("embed")]
+        public async Task SendEmbedMessage(CommandContext ctx)
         {
-            int answer = num1 + num2;
-            await ctx.Channel.SendMessageAsync(answer.ToString());
-        }
+            var embedMessage = new DiscordMessageBuilder()
+                .AddEmbed(new DiscordEmbedBuilder()
 
-        [Command("johnnysins")]
-        public async Task JohnnySins(CommandContext ctx)
-        {
-            await ctx.Channel.SendMessageAsync("http://www.washingtonpost.com/news/morning-mix/wp-content/uploads/sites/21/2015/06/20150427134154-astronaught.png");
-        }
+                .WithTitle("Seagull")
+                .WithDescription("Ballin, but at what cost")
+                .WithColor(DiscordColor.Lilac)
+                );
 
+            await ctx.Channel.SendMessageAsync(embedMessage);
+        }
     }
 }

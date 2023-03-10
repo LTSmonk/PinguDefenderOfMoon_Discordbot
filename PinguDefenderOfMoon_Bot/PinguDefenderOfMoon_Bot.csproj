@@ -154,8 +154,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bot.cs" />
+    <Compile Include="Commands\Gamecommands.cs" />
     <Compile Include="Commands\StandardCommands.cs" />
     <Compile Include="ConfigJSON.cs" />
+    <Compile Include="External Classes\CardBuilder.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
