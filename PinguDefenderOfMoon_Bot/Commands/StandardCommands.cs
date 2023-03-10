@@ -24,5 +24,12 @@ namespace PinguDefenderOfMoon_Bot.Commands
             int answer = num1 + num2;
             await ctx.Channel.SendMessageAsync(answer.ToString());
         }
+
+        [Command("johnnysins")]
+        public async Task JohnnySins(CommandContext ctx)
+        {
+            await ctx.Channel.SendMessageAsync("http://www.washingtonpost.com/news/morning-mix/wp-content/uploads/sites/21/2015/06/20150427134154-astronaught.png");
+        }
+
     }
 }
