@@ -1,7 +1,6 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,14 +22,13 @@ namespace PinguDefenderOfMoon_Bot.Commands
         [Command("displayall")]
         public async Task SendAllMembersVotes(CommandContext ctx)
         {
-            string path = Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetCurrentDirectory()).FullName).FullName).FullName;
-            string playersDir = Path.Combine(path, "FaceitVotes", "bin", "Debug", "Players");
+            string playersDir = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "FaceitVotes", "bin", "Debug", "Players");
 
             var embedBuilder = new DiscordEmbedBuilder()
                 .WithTitle("Votes for all players!")
                 .WithColor(DiscordColor.Aquamarine);
 
-            Dictionary<string, int> totals = new Dictionary<string, int>
+            var totals = new Dictionary<string, int>
             {
                 {"Ancient", 0},
                 {"Overpass", 0},
@@ -45,8 +43,9 @@ namespace PinguDefenderOfMoon_Bot.Commands
             foreach (string filePath in Directory.GetFiles(playersDir, "*.txt"))
             {
                 var playerData = File.ReadAllLines(filePath);
-                embedBuilder.AddField($"{playerData[1]} [{playerData[0]}]", $"*Ancient*: {playerData[2]}\n *Overpass*: {playerData[3]}\n *Dust 2*: {playerData[4]}\n *Inferno*: {playerData[5]}\n *Mirage*: {playerData[6]}\n *Nuke*: {playerData[7]}\n *Vertigo*: {playerData[8]}\n *Anubis*: {playerData[9]}");
+                int id = int.Parse(playerData[0]);
 
+                embedBuilder.AddField($"{playerData[1]} [{playerData[0]}]", $"*Ancient*: {playerData[2]}\n *Overpass*: {playerData[3]}\n *Dust 2*: {playerData[4]}\n *Inferno*: {playerData[5]}\n *Mirage*: {playerData[6]}\n *Nuke*: {playerData[7]}\n *Vertigo*: {playerData[8]}\n *Anubis*: {playerData[9]}");
                 totals["Ancient"] += int.Parse(playerData[2]);
                 totals["Overpass"] += int.Parse(playerData[3]);
                 totals["Dust 2"] += int.Parse(playerData[4]);
@@ -55,11 +54,12 @@ namespace PinguDefenderOfMoon_Bot.Commands
                 totals["Nuke"] += int.Parse(playerData[7]);
                 totals["Vertigo"] += int.Parse(playerData[8]);
                 totals["Anubis"] += int.Parse(playerData[9]);
+
             }
 
             var sortedTotals = totals.OrderByDescending(x => x.Value);
 
-            StringBuilder totalString = new StringBuilder();
+            var totalString = new StringBuilder();
             foreach (var total in sortedTotals)
             {
                 totalString.AppendLine($"*{total.Key}:* {total.Value}");
@@ -111,8 +111,6 @@ namespace PinguDefenderOfMoon_Bot.Commands
                 }
             }
 
-
-
             var sortedTotals = totals.OrderByDescending(x => x.Value);
 
             StringBuilder totalString = new StringBuilder();
@@ -127,6 +125,84 @@ namespace PinguDefenderOfMoon_Bot.Commands
             await ctx.Channel.SendMessageAsync(embedMessage);
         }
 
+        [Command("edit")]
+        public async Task EditMemberVotes(CommandContext ctx, string playerName, string map, int value)
+        {
+            string path = Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetCurrentDirectory()).FullName).FullName).FullName;
+            string playersDir = Path.Combine(path, "FaceitVotes", "bin", "Debug", "Players");
+
+            var filePath = Path.Combine(playersDir, $"{playerName}.txt");
+            if (!File.Exists(filePath))
+            {
+                await ctx.RespondAsync($"Player with name {playerName} does not exist.");
+                return;
+            }
+
+            var lines = File.ReadAllLines(filePath);
+            if (lines.Length != 10)
+            {
+                await ctx.RespondAsync($"Invalid file format for player with name {playerName}.");
+                return;
+            }
+
+            var mapIndex = -1;
+            switch (map.ToLower())
+            {
+                case "ancient":
+                    mapIndex = 2;
+                    break;
+                case "overpass":
+                    mapIndex = 3;
+                    break;
+                case "dust 2":
+                    mapIndex = 4;
+                    break;
+                case "inferno":
+                    mapIndex = 5;
+                    break;
+                case "mirage":
+                    mapIndex = 6;
+                    break;
+                case "nuke":
+                    mapIndex = 7;
+                    break;
+                case "vertigo":
+                    mapIndex = 8;
+                    break;
+                case "anubis":
+                    mapIndex = 9;
+                    break;
+                default:
+                    await ctx.RespondAsync($"Invalid map: {map}");
+                    return;
+            }
+
+            var votes = lines[mapIndex].Split(',');
+            if (votes.Length != 1)
+            {
+                await ctx.RespondAsync($"Invalid votes format for player with name {playerName}.");
+                return;
+            }
+
+            var oldValue = int.Parse(votes[0]);
+            var newValue = value;
+
+            if (newValue < 1)
+            {
+                newValue = 1;
+            }
+            if (newValue > 5)
+            {
+                newValue = 5;
+            }
+
+            lines[mapIndex] = newValue.ToString();
+
+            File.WriteAllLines(filePath, lines);
+
+            await ctx.RespondAsync($"Successfully updated {map} votes for player with name {playerName} from {oldValue} to {newValue}.");
+        }
+
         [Command("help")]
 
         public async Task ShowHelp(CommandContext ctx)
@@ -135,12 +211,11 @@ namespace PinguDefenderOfMoon_Bot.Commands
                 .WithTitle("Available Commands")
                 .WithColor(DiscordColor.Aquamarine);
 
-            embedBuilder
-                       
-                       .AddField("!ryangosling", "Do I need say more? It's ryan gosling godammit!")
-                       .AddField("!displayall", "Sends a message with the current vote count for all players.")
-                       .AddField("!displaymissing(id to be excluded)", "Sends a message with the current vote count for all players expect one player")
-                       .AddField("!help", "Displays the available commands and their descriptions.");
+            embedBuilder.AddField("!ryangosling", "Do I need say more? It's ryan gosling godammit!")
+                        .AddField("!displayall", "Sends a message with the current vote count for all players.")
+                        .AddField("!displaymissing [playerName to be excluded]", "Sends a message with the current vote count for all players expect one player")
+                        .AddField("!edit [name] [map] [new vote]", "Edit the value of selected name of the selected map")
+                        .AddField("!help", "Displays the available commands and their descriptions.");
 
             var embedMessage = new DiscordMessageBuilder().AddEmbed(embedBuilder);
             await ctx.Channel.SendMessageAsync(embedMessage);
