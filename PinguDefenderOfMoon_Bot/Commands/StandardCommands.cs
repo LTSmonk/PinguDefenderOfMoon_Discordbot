@@ -203,6 +203,26 @@ namespace PinguDefenderOfMoon_Bot.Commands
             await ctx.RespondAsync($"Successfully updated {map} votes for player with name {playerName} from {oldValue} to {newValue}.");
         }
 
+        [Command("addplayer")]
+        public async Task AddPlayer(CommandContext ctx, string name, int ancientVotes = 0, int overpassVotes = 0, int dust2Votes = 0, int infernoVotes = 0, int mirageVotes = 0, int nukeVotes = 0, int vertigoVotes = 0, int anubisVotes = 0)
+        {
+            string playersDir = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "FaceitVotes", "bin", "Debug", "Players");
+
+            int id = Directory.GetFiles(playersDir).Length;
+
+            // Build the string for the player's data
+            string playerData = $"{id}\n{name}\n{ancientVotes}\n{overpassVotes}\n{dust2Votes}\n{infernoVotes}\n{mirageVotes}\n{nukeVotes}\n{vertigoVotes}\n{anubisVotes}";
+
+            // Get the path to the Players directory
+
+            // Create the file for the player's data
+            string filePath = Path.Combine(playersDir, $"{name}.txt");
+            File.WriteAllText(filePath, playerData);
+
+            await ctx.RespondAsync($"Added {name} ({id}) to the list of players with the following votes:\n\nAncient: {ancientVotes}\nOverpass: {overpassVotes}\nDust 2: {dust2Votes}\nInferno: {infernoVotes}\nMirage: {mirageVotes}\nNuke: {nukeVotes}\nVertigo: {vertigoVotes}\nAnubis: {anubisVotes}");
+        }
+
+
         [Command("help")]
 
         public async Task ShowHelp(CommandContext ctx)
@@ -215,6 +235,7 @@ namespace PinguDefenderOfMoon_Bot.Commands
                         .AddField("!displayall", "Sends a message with the current vote count for all players.")
                         .AddField("!displaymissing [playerName to be excluded]", "Sends a message with the current vote count for all players expect one player")
                         .AddField("!edit [name] [map] [new vote]", "Edit the value of selected name of the selected map")
+                        .AddField("!addplayer [name] [ancient] [overpass] [dust_2] [inferno] [mirage] [nuke] [vertigo] [anubis]", "Add a player to the database, ratings are between 1-5!")
                         .AddField("!help", "Displays the available commands and their descriptions.");
 
             var embedMessage = new DiscordMessageBuilder().AddEmbed(embedBuilder);
