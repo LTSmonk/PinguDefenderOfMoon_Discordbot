@@ -4,6 +4,7 @@ using DSharpPlus.Entities;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Contexts;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -72,7 +73,7 @@ namespace PinguDefenderOfMoon_Bot.Commands
         }
 
         [Command("displaymissing")]
-        public async Task SendAllMembersVotesExcludingId(CommandContext ctx, int excludeId)
+        public async Task SendAllMembersVotesExcludingIds(CommandContext ctx, params int[] excludeIds)
         {
             string path = Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetCurrentDirectory()).FullName).FullName).FullName;
             string playersDir = Path.Combine(path, "FaceitVotes", "bin", "Debug", "Players");
@@ -97,7 +98,7 @@ namespace PinguDefenderOfMoon_Bot.Commands
             {
                 var playerData = File.ReadAllLines(filePath);
                 int id = int.Parse(playerData[0]);
-                if (id != excludeId)
+                if (!excludeIds.Contains(id))
                 {
                     embedBuilder.AddField($"{playerData[1]} [{playerData[0]}]", $"*Ancient*: {playerData[2]}\n *Overpass*: {playerData[3]}\n *Dust 2*: {playerData[4]}\n *Inferno*: {playerData[5]}\n *Mirage*: {playerData[6]}\n *Nuke*: {playerData[7]}\n *Vertigo*: {playerData[8]}\n *Anubis*: {playerData[9]}");
                     totals["Ancient"] += int.Parse(playerData[2]);
@@ -124,6 +125,7 @@ namespace PinguDefenderOfMoon_Bot.Commands
             var embedMessage = new DiscordMessageBuilder().AddEmbed(embedBuilder);
             await ctx.Channel.SendMessageAsync(embedMessage);
         }
+
 
         [Command("edit")]
         public async Task EditMemberVotes(CommandContext ctx, string playerName, string map, int value)
@@ -187,9 +189,16 @@ namespace PinguDefenderOfMoon_Bot.Commands
             var oldValue = int.Parse(votes[0]);
             var newValue = value;
 
+            if (newValue == 1 && playerName != "Linus")
+            {
+                await ctx.RespondAsync($"Linus, sluta försök andras värden på Inferno!");
+                return;
+            }
+
             if (newValue < 1)
             {
                 newValue = 1;
+
             }
             if (newValue > 5)
             {
@@ -210,12 +219,8 @@ namespace PinguDefenderOfMoon_Bot.Commands
 
             int id = Directory.GetFiles(playersDir).Length;
 
-            // Build the string for the player's data
             string playerData = $"{id}\n{name}\n{ancientVotes}\n{overpassVotes}\n{dust2Votes}\n{infernoVotes}\n{mirageVotes}\n{nukeVotes}\n{vertigoVotes}\n{anubisVotes}";
 
-            // Get the path to the Players directory
-
-            // Create the file for the player's data
             string filePath = Path.Combine(playersDir, $"{name}.txt");
             File.WriteAllText(filePath, playerData);
 
@@ -233,10 +238,11 @@ namespace PinguDefenderOfMoon_Bot.Commands
 
             embedBuilder.AddField("!ryangosling", "Do I need say more? It's ryan gosling godammit!")
                         .AddField("!displayall", "Sends a message with the current vote count for all players.")
-                        .AddField("!displaymissing [playerName to be excluded]", "Sends a message with the current vote count for all players expect one player")
+                        .AddField("!displaymissing [player id]", "Sends a message with the current vote count for all players expect one player. Player id can be sent multiple times to exclude multiple ids")
                         .AddField("!edit [name] [map] [new vote]", "Edit the value of selected name of the selected map")
                         .AddField("!addplayer [name] [ancient] [overpass] [dust_2] [inferno] [mirage] [nuke] [vertigo] [anubis]", "Add a player to the database, ratings are between 1-5!")
-                        .AddField("!help", "Displays the available commands and their descriptions.");
+                        .AddField("!help", "Displays the available commands and their descriptions.")
+                        .AddField("Example", "!displaymissing 1 5 2");
 
             var embedMessage = new DiscordMessageBuilder().AddEmbed(embedBuilder);
             await ctx.Channel.SendMessageAsync(embedMessage);
